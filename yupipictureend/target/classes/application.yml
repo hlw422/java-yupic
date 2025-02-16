@@ -11,6 +11,9 @@ spring:
     url: jdbc:mysql://192.168.0.10:13306/yu_picture
     username: root
     password: 123456
+  servlet:
+    multipart:
+      max-file-size: 100MB
 mybatis-plus:
   configuration:
     # MyBatis 配置
@@ -32,3 +35,7 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.hlw.yupipictureend.controller
+
+
+
+
