@@ -1,9 +1,11 @@
 package com.hlw.yupipictureend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.hlw.yupipictureend.entity.Picture;
 import com.hlw.yupipictureend.entity.User;
 import com.hlw.yupipictureend.model.dto.user.UserQueryRequest;
 import com.hlw.yupipictureend.vo.LoginUserVO;
+import com.hlw.yupipictureend.vo.PictureVO;
 import com.hlw.yupipictureend.vo.UserVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -51,4 +53,19 @@ public interface UserService extends IService<User> {
     List<UserVO> getUserVOList(List<User> userList);
 
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+
+
+    /**
+     * 判断用户是否为管理员
+     * @param user
+     * @return
+     */
+    boolean isAdmin(User user);
+
+    /**
+     * 验证图片是否有效
+     * @param picture
+     */
+    void validPicture(Picture picture);
+
 }
