@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -158,6 +157,21 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         });
         pictureVOPage.setRecords(pictureVOList);
         return pictureVOPage;
+    }
+
+    @Override
+    public void validPicture(Picture picture) {
+        ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR);
+        Long id = picture.getId();
+        String url = picture.getUrl();
+        String introduction = picture.getIntroduction();
+        ThrowUtils.throwIf(id == null, ErrorCode.PARAMS_ERROR, "图片id不能为空");
+        if(StrUtil.isNotBlank(url)) {
+            ThrowUtils.throwIf(url.length() > 1024, ErrorCode.PARAMS_ERROR, "图片url长度不能超过1024");
+        }
+        if(StrUtil.isNotBlank(introduction)) {
+            ThrowUtils.throwIf(url.length() > 500, ErrorCode.PARAMS_ERROR, "图片介绍长度不能超过500");
+        }
     }
 
 

@@ -192,20 +192,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
 
-    @Override
-    public void validPicture(Picture picture) {
-        ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR);
-        Long id = picture.getId();
-        String url = picture.getUrl();
-        String introduction = picture.getIntroduction();
-        ThrowUtils.throwIf(id == null, ErrorCode.PARAMS_ERROR, "图片id不能为空");
-        if(StrUtil.isNotBlank(url)) {
-            ThrowUtils.throwIf(url.length() > 1024, ErrorCode.PARAMS_ERROR, "图片url长度不能超过1024");
-        }
-        if(StrUtil.isNotBlank(introduction)) {
-            ThrowUtils.throwIf(url.length() > 500, ErrorCode.PARAMS_ERROR, "图片介绍长度不能超过500");
-        }
-    }
 }
 
 

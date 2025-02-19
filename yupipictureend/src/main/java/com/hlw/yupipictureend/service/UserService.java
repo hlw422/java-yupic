@@ -62,10 +62,5 @@ public interface UserService extends IService<User> {
      */
     boolean isAdmin(User user);
 
-    /**
-     * 验证图片是否有效
-     * @param picture
-     */
-    void validPicture(Picture picture);
 
 }

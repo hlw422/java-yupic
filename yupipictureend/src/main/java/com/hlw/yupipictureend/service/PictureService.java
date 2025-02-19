@@ -25,4 +25,6 @@ public interface PictureService extends IService<Picture> {
     PictureVO getPictureVO(Picture picture, HttpServletRequest request);
 
     Page<PictureVO>getPicturVOPage(Page<Picture>picturePage,HttpServletRequest request);
+
+    void validPicture(Picture picture);
 }
