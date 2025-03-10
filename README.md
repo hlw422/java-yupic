@@ -38,11 +38,11 @@
 
 
 
-1. **前端**：swiftui。
+1. **前端**：vue/ant design。
 
 
 
-2. **后端**：基于[swift],工具采用XCode.
+2. **后端**：基于[spring boot],工具采用idea.
 
 
 
