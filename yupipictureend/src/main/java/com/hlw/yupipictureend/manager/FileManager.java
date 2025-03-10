@@ -4,10 +4,16 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.Method;
 import com.hlw.yupipictureend.config.CosClientConfig;
 import com.hlw.yupipictureend.exception.BusinessException;
 import com.hlw.yupipictureend.exception.ErrorCode;
 import com.hlw.yupipictureend.exception.ThrowUtils;
+import com.hlw.yupipictureend.manager.upload.PictureUploadTemplate;
 import com.hlw.yupipictureend.model.dto.file.UploadPictureResult;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
@@ -19,12 +25,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
+@Deprecated
+/**
+ * 已废弃，请使用 {@link FilePictureUpload}
+ */
 public class FileManager {
 
     @Resource
@@ -32,7 +45,6 @@ public class FileManager {
 
     @Resource
     private CosManager cosManager;
-
 
 
     /**
@@ -82,6 +94,7 @@ public class FileManager {
         }
     }
 
+    /*
     /**
      * 校验文件
      *
@@ -113,19 +126,45 @@ public class FileManager {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
     }
+    public void validPicture(String url) {
+        ThrowUtils.throwIf(StrUtil.isBlank(url), ErrorCode.PARAMS_ERROR, "图片 url 不能为空");
+        try {
+            new URL(url);
+        } catch (MalformedURLException e) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片 url 地址错误");
+        }
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片 url 必须以http://或https://开头");
+        }
+        HttpResponse response = null;
+        try {
+            if (response.getStatus() != HttpStatus.HTTP_OK) {
+                return;
+            }
+            String contentType = response.header("Content-Type");
+            if (StrUtil.isNotBlank(contentType)) {
+                final List<String> ALLOW_FORMAT_LIST = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/webp");
+                ThrowUtils.throwIf(!ALLOW_FORMAT_LIST.contains(contentType.toLowerCase()), ErrorCode.PARAMS_ERROR, "文件类型错误");
+            }
+            String contentLength = response.header("Content-Length");     // 图片大小
+            if (StrUtil.isNotBlank(contentLength)) {
+                try {
+                    long contentLengthLong = Long.parseLong(contentLength);
+                    final long ONE_M = 1024 * 1024L;
+                    ThrowUtils.throwIf(contentLengthLong > 2 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2M");
+                } catch (NumberFormatException e) {
+                    ThrowUtils.throwIf(true, ErrorCode.PARAMS_ERROR, "图片大小错误");
+                }
 
+            }
+        } catch (Exception e) {
 
-
-
-
-
-
-
-
-
-
-
-    // ...
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+    }
 }
 
 

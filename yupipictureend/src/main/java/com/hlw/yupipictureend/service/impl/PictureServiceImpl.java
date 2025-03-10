@@ -13,6 +13,9 @@ import com.hlw.yupipictureend.exception.BusinessException;
 import com.hlw.yupipictureend.exception.ErrorCode;
 import com.hlw.yupipictureend.exception.ThrowUtils;
 import com.hlw.yupipictureend.manager.FileManager;
+import com.hlw.yupipictureend.manager.upload.FilePictureUpload;
+import com.hlw.yupipictureend.manager.upload.PictureUploadTemplate;
+import com.hlw.yupipictureend.manager.upload.UrlPictureUpload;
 import com.hlw.yupipictureend.mapper.PictureMapper;
 import com.hlw.yupipictureend.model.dto.file.UploadPictureResult;
 import com.hlw.yupipictureend.model.dto.picture.PictureQueryRequest;
@@ -25,7 +28,6 @@ import com.hlw.yupipictureend.vo.PictureVO;
 import com.hlw.yupipictureend.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -43,8 +45,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     @Resource
     private UserService userService;
 
+    @Resource
+    private FilePictureUpload filePictureUpload;
+    @Resource
+    private UrlPictureUpload urlPictureUpload;
+
     @Override
-    public PictureVO UploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser) {
+    public PictureVO UploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
         //校验参数
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
         //判断新增还是删除
@@ -62,7 +69,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
         //android端上传图片时，图片的路径为public/userId/pictureName.jpg
         String UploadPathPrefix = String.format("public/%s", loginUser.getId());
-        UploadPictureResult uploadPictureResult = fileManager.uploadPicture(multipartFile, UploadPathPrefix);
+        //修改为模板方法。
+        PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
+        if(inputSource instanceof String){
+            pictureUploadTemplate = urlPictureUpload;
+        }
+        UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, UploadPathPrefix);
 
         //设置图片属性
         Picture picture = new Picture();
