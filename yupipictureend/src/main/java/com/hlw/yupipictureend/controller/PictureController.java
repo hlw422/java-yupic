@@ -12,10 +12,7 @@ import com.hlw.yupipictureend.entity.User;
 import com.hlw.yupipictureend.exception.BusinessException;
 import com.hlw.yupipictureend.exception.ErrorCode;
 import com.hlw.yupipictureend.exception.ThrowUtils;
-import com.hlw.yupipictureend.model.dto.picture.PictureEditRequest;
-import com.hlw.yupipictureend.model.dto.picture.PictureQueryRequest;
-import com.hlw.yupipictureend.model.dto.picture.PictureReviewRequest;
-import com.hlw.yupipictureend.model.dto.picture.PictureUploadRequest;
+import com.hlw.yupipictureend.model.dto.picture.*;
 import com.hlw.yupipictureend.model.enums.PictureReviewStatusEnum;
 import com.hlw.yupipictureend.service.PictureService;
 import com.hlw.yupipictureend.service.UserService;
@@ -233,4 +230,16 @@ public class PictureController {
         pictureService.doPictureReview(pictureReviewRequest, LoginUser);
         return ResultUtils.success(true);
     }
+
+    @PostMapping("/upload/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Integer> uploadPictureByBatch(
+            @RequestBody PictureUploadByBatchRequest pictureUploadByBatchRequest,
+            HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureUploadByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        int uploadCount = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, loginUser);
+        return ResultUtils.success(uploadCount);
+    }
+
 }

@@ -13,15 +13,16 @@ public class PictureUploadRequest implements Serializable {
      */
     private Long id;
 
-    /**
-     * 图片名称
-     */
-    private String name;
 
     /**
      * 简介
      */
     private String introduction;
+
+
+    private String picName;
+
+
 
     /**
      * 分类

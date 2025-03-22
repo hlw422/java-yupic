@@ -7,6 +7,7 @@ import com.hlw.yupipictureend.entity.Picture;
 import com.hlw.yupipictureend.entity.User;
 import com.hlw.yupipictureend.model.dto.picture.PictureQueryRequest;
 import com.hlw.yupipictureend.model.dto.picture.PictureReviewRequest;
+import com.hlw.yupipictureend.model.dto.picture.PictureUploadByBatchRequest;
 import com.hlw.yupipictureend.model.dto.picture.PictureUploadRequest;
 import com.hlw.yupipictureend.model.dto.user.UserQueryRequest;
 import com.hlw.yupipictureend.vo.LoginUserVO;
@@ -70,4 +71,19 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      */
     void fillReviewParams(Picture picture, User loginUser);
+
+
+    /**
+     * 批量抓取和创建图片
+     *
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return 成功创建的图片数
+     */
+    Integer uploadPictureByBatch(
+            PictureUploadByBatchRequest pictureUploadByBatchRequest,
+            User loginUser
+    );
+
+
 }
