@@ -147,12 +147,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         queryWrapper.eq(ObjUtil.isNotEmpty(name), "name", name);
         queryWrapper.like(ObjUtil.isNotEmpty(introduction), "introduction", introduction);
         queryWrapper.like(ObjUtil.isNotEmpty(category), "category", category);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "pic_size", picSize);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "pic_width", picWidth);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "pic_height", picHeight);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "pic_scale", picScale);
-        queryWrapper.like(ObjUtil.isNotEmpty(picFormat), "pic_format", picFormat);
-        queryWrapper.eq(ObjUtil.isNotEmpty(userId), "user_id", userId);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "picSize", picSize);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "picWidth", picWidth);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "picHeight", picHeight);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "picScale", picScale);
+        queryWrapper.like(ObjUtil.isNotEmpty(picFormat), "picFormat", picFormat);
+        queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
 
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
         queryWrapper.like(ObjUtil.isNotEmpty(reviewMessage), "reviewMessage", reviewMessage);

@@ -1,5 +1,6 @@
 package com.hlw.yupipictureend.controller;
 
+import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hlw.yupipictureend.annotation.AuthCheck;
@@ -21,6 +22,10 @@ import com.hlw.yupipictureend.vo.PictureVO;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +44,9 @@ public class PictureController {
     private UserService userService;
     @Resource
     private PictureService pictureService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     @PostMapping("/upload")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -168,6 +176,45 @@ public class PictureController {
                 pictureService.getQueryWrapper(pictureQueryRequest));
         return ResultUtils.success(pictureService.getPicturVOPage(picturePage, request));
     }
+
+    /**
+     * 分页获取图片列表（封装类）
+     */
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                             HttpServletRequest request) {
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        //普通用户只能查看已审核的图片
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+
+        //查询缓存中是否存在数据
+        String queryKey = JSONUtil.toJsonStr(pictureQueryRequest);
+        String haskey = DigestUtils.md5DigestAsHex(queryKey.getBytes());
+        String redisKey = String.format("yupicture:listPictureVOByPage:%s", haskey);
+        String redisValue = redisTemplate.opsForValue().get(redisKey);
+        if (redisValue != null) {
+            log.info("从缓存中获取数据");
+            Page<PictureVO> pictureVOPage = JSONUtil.toBean(redisValue, Page.class);
+            return ResultUtils.success(pictureVOPage);
+        }
+
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+                pictureService.getQueryWrapper(pictureQueryRequest));
+
+
+        //缓存数据
+        Page<PictureVO> pictureVOPage = pictureService.getPicturVOPage(picturePage, request);
+        redisValue = JSONUtil.toJsonStr(pictureVOPage);
+        //设置随机过期时间 5-10分钟
+        int expireTime = (int) (Math.random() * 5 + 5) * 60;
+        redisTemplate.opsForValue().set(redisKey, redisValue, expireTime, java.util.concurrent.TimeUnit.SECONDS);
+        return ResultUtils.success(pictureVOPage);
+    }
+
+
 
     /**
      * 编辑图片（给用户使用）
