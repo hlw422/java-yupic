@@ -3,6 +3,8 @@ package com.hlw.yupipictureend.controller;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hlw.yupipictureend.annotation.AuthCheck;
 import com.hlw.yupipictureend.common.BaseResponse;
 import com.hlw.yupipictureend.common.DeleteRequest;
@@ -35,6 +37,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -45,8 +48,20 @@ public class PictureController {
     @Resource
     private PictureService pictureService;
 
+
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+
+    /**
+     * Caffeine 缓存本地变量
+     */
+    private final Cache<String, String> LOCAL_CACHE =
+            Caffeine.newBuilder().initialCapacity(1024)
+                    .maximumSize(10000L)
+                    // 缓存 5 分钟移除
+                    .expireAfterWrite(5L, TimeUnit.MINUTES)
+                    .build();
 
     @PostMapping("/upload")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -69,6 +84,7 @@ public class PictureController {
         PictureVO pictureVO = pictureService.UploadPicture(pictureUploadRequest.getFileUrl(), pictureUploadRequest, loginUser);
         return ResultUtils.success(pictureVO);
     }
+
 
 
     @PostMapping("/delete")
@@ -194,9 +210,21 @@ public class PictureController {
         String queryKey = JSONUtil.toJsonStr(pictureQueryRequest);
         String haskey = DigestUtils.md5DigestAsHex(queryKey.getBytes());
         String redisKey = String.format("yupicture:listPictureVOByPage:%s", haskey);
+
+        String localValue=LOCAL_CACHE.getIfPresent(redisKey);
+        if(localValue!=null) {
+            log.info("从本地缓存中获取数据");
+            Page<PictureVO> pictureVOPage = JSONUtil.toBean(localValue, Page.class);
+            return ResultUtils.success(pictureVOPage);
+        }
+
+
         String redisValue = redisTemplate.opsForValue().get(redisKey);
         if (redisValue != null) {
             log.info("从缓存中获取数据");
+            //存入本地缓存
+            LOCAL_CACHE.put(redisKey, redisValue);
+
             Page<PictureVO> pictureVOPage = JSONUtil.toBean(redisValue, Page.class);
             return ResultUtils.success(pictureVOPage);
         }
@@ -208,9 +236,11 @@ public class PictureController {
         //缓存数据
         Page<PictureVO> pictureVOPage = pictureService.getPicturVOPage(picturePage, request);
         redisValue = JSONUtil.toJsonStr(pictureVOPage);
+        LOCAL_CACHE.put(redisKey, redisValue);
         //设置随机过期时间 5-10分钟
         int expireTime = (int) (Math.random() * 5 + 5) * 60;
         redisTemplate.opsForValue().set(redisKey, redisValue, expireTime, java.util.concurrent.TimeUnit.SECONDS);
+
         return ResultUtils.success(pictureVOPage);
     }
 
